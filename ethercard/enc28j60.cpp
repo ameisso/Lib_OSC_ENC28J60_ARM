@@ -8,11 +8,11 @@
 //
 // 2010-05-20 <jc@wippler.nl>
 
-#if ARDUINO >= 100
+/*#if ARDUINO >= 100
 #include <Arduino.h> // Arduino 1.0
 #else
 #include <Wprogram.h> // Arduino 0022
-#endif
+#endif*/
 #include "enc28j60.h"
 
 word ENC28J60::bufferSize;
