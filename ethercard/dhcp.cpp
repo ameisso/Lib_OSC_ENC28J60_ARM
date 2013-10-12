@@ -16,7 +16,7 @@
 
 #include "EtherCard.h"
 #include "net.h"
-
+#include "config.h"
 #define gPB ether.buffer
 
 #define DHCP_BOOTREQUEST 1
@@ -78,11 +78,11 @@ enum {
  
 // size 236
 typedef struct {
-    byte op, htype, hlen, hops;
+    uint8_t op, htype, hlen, hops;
     uint32_t xid;
     word secs, flags;
-    byte ciaddr[4], yiaddr[4], siaddr[4], giaddr[4];
-    byte chaddr[16], sname[64], file[128];
+    uint8_t ciaddr[4], yiaddr[4], siaddr[4], giaddr[4];
+    uint8_t chaddr[16], sname[64], file[128];
     // options
 } DHCPdata;
 
@@ -92,21 +92,21 @@ typedef struct {
 // timeouts im ms 
 #define DHCP_REQUEST_TIMEOUT 10000
 
-static byte dhcpState = DHCP_STATE_INIT;
-static char hostname[] = "Arduino-00";
+static uint8_t dhcpState = DHCP_STATE_INIT;
+static char hostname[] = HOSTNAME
 static uint32_t currentXid;
 static uint32_t stateTimer;
 static uint32_t leaseStart;
 static uint32_t leaseTime;
-static byte* bufPtr;
+static uint8_t* bufPtr;
 
 // static uint8_t allOnes[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 
-static void addToBuf (byte b) {
+static void addToBuf (uint8_t b) {
     *bufPtr++ = b;
 }
 
-static void addBytes (byte len, const byte* data) {
+static void addBytes (uint8_t len, const uint8_t* data) {
     while (len-- > 0)
         addToBuf(*data++);
 }
@@ -167,7 +167,7 @@ static void send_dhcp_message (void) {
     // options defined as option, length, value
     bufPtr = gPB + UDP_DATA_P + sizeof( DHCPdata );
     // DHCP magic cookie, followed by message type
-    static byte cookie[] = { 99, 130, 83, 99, 53, 1 };
+    static uint8_t cookie[] = { 99, 130, 83, 99, 53, 1 };
     addBytes(sizeof cookie, cookie);
     // addToBuf(53);  // DHCP_STATE_SELECTING, DHCP_STATE_REQUESTING
     // addToBuf(1);   // Length 
@@ -181,7 +181,7 @@ static void send_dhcp_message (void) {
     
     addToBuf(12);     // Host name Option
     addToBuf(10);
-    addBytes(10, (byte*) hostname);
+    addBytes(10, (uint8_t*) hostname);
     
 	
 	if( dhcpState == DHCP_STATE_SELECTING) {
@@ -196,7 +196,7 @@ static void send_dhcp_message (void) {
     }
     
     // Additional info in parameter list - minimal list for what we need
-    static byte tail[] = { 55, 3, 1, 3, 6, 255 };
+    static uint8_t tail[] = { 55, 3, 1, 3, 6, 255 };
     addBytes(sizeof tail, tail);
     // addToBuf(55);     // Parameter request list
     // addToBuf(3);      // Length 

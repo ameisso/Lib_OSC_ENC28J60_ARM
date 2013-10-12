@@ -34,6 +34,20 @@
     SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 /**************************************************************************/
-#ifndef HWFUNK_h
-#define HWFUNK_h
+//TODO define the terms and the default values in comment.s
+#define SS
+#define MOSI 
+#define MISO
+#define SCK
+#define SPCR
+#define SPE
+#define MSTR
+#define SPSR
+#define SPI2X
+#define cli
+#define sei
+#define SPDR
+#define SPSR
+#define SPIF
 
+uint16_t millis();//function that return the time elapsed since the begining

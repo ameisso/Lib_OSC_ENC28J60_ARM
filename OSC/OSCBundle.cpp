@@ -130,6 +130,7 @@ OSCMessage * OSCBundle::getOSCMessage(int pos){
 	if (pos < numMessages){
 		return messages[pos];
 	} 
+	else return messages[-1]; //if error, return 0
 }
 
 /*=============================================================================
@@ -190,9 +191,7 @@ OSCErrorCode OSCBundle::getError(){
 
 void OSCBundle::send(Print &p){
     //don't send a bundle with errors
-    if (hasError()){
-        return;
-    }
+    if (!hasError()){
     //write the bundle header
     static uint8_t header[] = {'#', 'b', 'u', 'n', 'd', 'l', 'e', 0};
     p.write(header, 8);
@@ -210,6 +209,7 @@ void OSCBundle::send(Print &p){
         //write the messsage size
         p.write(sptr, 4);
         msg->send(p);
+		}
     }
 }
 

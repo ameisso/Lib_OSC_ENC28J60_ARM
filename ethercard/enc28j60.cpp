@@ -14,7 +14,7 @@
 #include <Wprogram.h> // Arduino 0022
 #endif*/
 #include "enc28j60.h"
-
+#include "hwFunk.h" //define the pin used for the ethernet communication 
 word ENC28J60::bufferSize;
 
 // ENC28J60 Control Registers
@@ -249,9 +249,9 @@ word ENC28J60::bufferSize;
 
 #define FULL_SPEED  1   // switch to full-speed SPI for bulk transfers
 
-static byte Enc28j60Bank;
+static uint8_t Enc28j60Bank;
 static int gNextPacketPtr;
-static byte selectPin;
+static uint8_t selectPin;
 
 void ENC28J60::initSPI () {
     pinMode(SS, OUTPUT);
@@ -278,31 +278,31 @@ static void disableChip () {
     sei();
 }
 
-static void xferSPI (byte data) {
+static void xferSPI (uint8_t data) {
     SPDR = data;
     while (!(SPSR&(1<<SPIF)))
         ;
 }
 
-static byte readOp (byte op, byte address) {
+static uint8_t readOp (uint8_t op, uint8_t address) {
     enableChip();
     xferSPI(op | (address & ADDR_MASK));
     xferSPI(0x00);
     if (address & 0x80)
         xferSPI(0x00);
-    byte result = SPDR;
+    uint8_t result = SPDR;
     disableChip();
     return result;
 }
 
-static void writeOp (byte op, byte address, byte data) {
+static void writeOp (uint8_t op, uint8_t address, uint8_t data) {
     enableChip();
     xferSPI(op | (address & ADDR_MASK));
     xferSPI(data);
     disableChip();
 }
 
-static void readBuf(word len, byte* data) {
+static void readBuf(word len, uint8_t* data) {
     enableChip();
     xferSPI(ENC28J60_READ_BUF_MEM);
     while (len--) {
@@ -312,7 +312,7 @@ static void readBuf(word len, byte* data) {
     disableChip();
 }
 
-static void writeBuf(word len, const byte* data) {
+static void writeBuf(word len, const uint8_t* data) {
     enableChip();
     xferSPI(ENC28J60_WRITE_BUF_MEM);
     while (len--)
@@ -320,7 +320,7 @@ static void writeBuf(word len, const byte* data) {
     disableChip();
 }
 
-static void SetBank (byte address) {
+static void SetBank (uint8_t address) {
     if ((address & BANK_MASK) != Enc28j60Bank) {
         writeOp(ENC28J60_BIT_FIELD_CLR, ECON1, ECON1_BSEL1|ECON1_BSEL0);
         Enc28j60Bank = address & BANK_MASK;
@@ -328,26 +328,26 @@ static void SetBank (byte address) {
     }
 }
 
-static byte readRegByte (byte address) {
+static byte readRegByte (c address) {
     SetBank(address);
     return readOp(ENC28J60_READ_CTRL_REG, address);
 }
 
-static word readReg(byte address) {
+static word readReg( address) {
 	return readRegByte(address) + (readRegByte(address+1) << 8);
 }
 
-static void writeRegByte (byte address, byte data) {
+static void writeRegByte (uint8_t  address, uint8_t  data) {
     SetBank(address);
     writeOp(ENC28J60_WRITE_CTRL_REG, address, data);
 }
 
-static void writeReg(byte address, word data) {
+static void writeReg(uint8_t  address, word data) {
     writeRegByte(address, data);
     writeRegByte(address + 1, data >> 8);
 }
 
-static word readPhyByte (byte address) {
+static word readPhyByte (uint8_t  address) {
     writeRegByte(MIREGADR, address);
     writeRegByte(MICMD, MICMD_MIIRD);
     while (readRegByte(MISTAT) & MISTAT_BUSY)
@@ -356,14 +356,14 @@ static word readPhyByte (byte address) {
     return readRegByte(MIRD+1);
 }
 
-static void writePhy (byte address, word data) {
+static void writePhy (uint8_t  address, word data) {
     writeRegByte(MIREGADR, address);
     writeReg(MIWR, data);
     while (readRegByte(MISTAT) & MISTAT_BUSY)
         ;
 }
 
-byte ENC28J60::initialize (word size, const byte* macaddr, byte csPin) {
+byte ENC28J60::initialize (word size, const uint8_t * macaddr, uint8_t  csPin) {
     bufferSize = size;
     if (bitRead(SPCR, SPE) == 0)
       initSPI();
@@ -440,7 +440,7 @@ word ENC28J60::packetReceive() {
             word status;
         } header;
         
-        readBuf(sizeof header, (byte*) &header);
+        readBuf(sizeof header, (uint8_t *) &header);
 
         gNextPacketPtr  = header.nextPacket;
         len = header.byteCount - 4; //remove the CRC count
@@ -460,7 +460,7 @@ word ENC28J60::packetReceive() {
     return len;
 }
 
-void ENC28J60::copyout (byte page, const byte* data) {
+void ENC28J60::copyout (uint8_t  page, const uint8_t* data) {
     word destPos = SCRATCH_START + (page << SCRATCH_PAGE_SHIFT);
     if (destPos < SCRATCH_START || destPos > SCRATCH_LIMIT - SCRATCH_PAGE_SIZE)
         return;
@@ -468,7 +468,7 @@ void ENC28J60::copyout (byte page, const byte* data) {
     writeBuf(SCRATCH_PAGE_SIZE, data);
 }
 
-void ENC28J60::copyin (byte page, byte* data) {
+void ENC28J60::copyin (uint8_t page, uint8_t* data) {
     word destPos = SCRATCH_START + (page << SCRATCH_PAGE_SHIFT);
     if (destPos < SCRATCH_START || destPos > SCRATCH_LIMIT - SCRATCH_PAGE_SIZE)
         return;
@@ -476,7 +476,7 @@ void ENC28J60::copyin (byte page, byte* data) {
     readBuf(SCRATCH_PAGE_SIZE, data);
 }
 
-byte ENC28J60::peekin (byte page, byte off) {
+byte ENC28J60::peekin (uint8_t page, uint8_t off) {
     byte result = 0;
     word destPos = SCRATCH_START + (page << SCRATCH_PAGE_SHIFT) + off;
     if (SCRATCH_START <= destPos && destPos < SCRATCH_LIMIT) {
@@ -516,7 +516,7 @@ void ENC28J60::disableMulticast () { // disable multicast filter , enable multic
     writeRegByte(ERXFCON, ERXFCON_CRCEN);
 }
 
-uint8_t ENC28J60::doBIST ( byte csPin) {
+uint8_t ENC28J60::doBIST (uint8_t csPin) {
 	#define RANDOM_FILL		0b0000
 	#define ADDRESS_FILL	0b0100
 	#define PATTERN_SHIFT	0b1000

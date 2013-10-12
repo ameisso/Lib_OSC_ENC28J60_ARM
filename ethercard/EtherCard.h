@@ -10,14 +10,7 @@
 // 2010-05-19 <jc@wippler.nl>
 //
 //
-// PIN Connections (Using Arduino UNO):
-//   VCC -   3.3V
-//   GND -    GND
-//   SCK - Pin 13
-//   SO  - Pin 12
-//   SI  - Pin 11
-//   CS  - Pin  8
-//
+
 #define __PROG_TYPES_COMPAT__
 
 #ifndef EtherCard_h
@@ -26,17 +19,18 @@
 
 /*#if ARDUINO >= 100
   //#include <Arduino.h> // Arduino 1.0
-  #define WRITE_RESULT size_t
-  #define WRITE_RETURN return 1;
+
 #else
 //  #include <WProgram.h> // Arduino 0022
   #define WRITE_RESULT void
   #define WRITE_RETURN
 #endif*/
-
+  #define WRITE_RESULT size_t
+  #define WRITE_RETURN return 1;
 //#include <avr/pgmspace.h>
 #include "enc28j60.h"
 #include "net.h"
+#include <libosc/common/Print.h>
 
 typedef void (*UdpServerCallback)(
 	uint16_t dest_port,	// the port the packet was sent to
@@ -128,7 +122,7 @@ public:
       
   void emit_p (PGM_P fmt, ...);
   void emit_raw (const char* s, uint16_t n) { memcpy(ptr, s, n); ptr += n; }
-  void emit_raw_p (PGM_P p, uint16_t n) { memcpy_P(ptr, p, n); ptr += n; }
+  void emit_raw_p (PGM_P p, uint16_t n) { memcpy(ptr, p, n); ptr += n; }
   
   uint8_t* buffer () const { return start; }
   uint16_t position () const { return ptr - start; }
@@ -161,20 +155,20 @@ public:
   static uint16_t packetLoop (uint16_t plen);
   static uint16_t accept(uint16_t port, uint16_t plen);
   static void httpServerReply (uint16_t dlen);
-  static void httpServerReply_with_flags (uint16_t dlen , byte flags);
+  static void httpServerReply_with_flags (uint16_t dlen , uint8_t flags);
   static void httpServerReplyAck ();
   static void setGwIp (const uint8_t *gwipaddr);
   static uint8_t clientWaitingGw ();
   static uint8_t clientTcpReq (uint8_t (*r)(uint8_t,uint8_t,uint16_t,uint16_t),
                                uint16_t (*d)(uint8_t),uint16_t port);
-  static void browseUrl (prog_char *urlbuf, const char *urlbuf_varpart,
-                         prog_char *hoststr, prog_char *header,
+  static void browseUrl (char *urlbuf, const char *urlbuf_varpart,
+                         char *hoststr, char *header,
                          void (*cb)(uint8_t,uint16_t,uint16_t));
-  static void browseUrl (prog_char *urlbuf, const char *urlbuf_varpart,
-                         prog_char *hoststr,
+  static void browseUrl (char *urlbuf, const char *urlbuf_varpart,
+                         char *hoststr,
                          void (*cb)(uint8_t,uint16_t,uint16_t));
-  static void httpPost (prog_char *urlbuf, prog_char *hoststr,
-                        prog_char *header, const char *postval,
+  static void httpPost (char *urlbuf, char *hoststr,
+                        char *header, const char *postval,
                         void (*cb)(uint8_t,uint16_t,uint16_t));
   static void ntpRequest (uint8_t *ntpip,uint8_t srcport);
   static uint8_t ntpProcessAnswer (uint32_t *time, uint8_t dstport_l);
@@ -188,7 +182,7 @@ public:
   static void sendWol (uint8_t *wolmac);
   // new stash-based API
   static uint8_t tcpSend ();
-  static const char* tcpReply (byte fd);
+  static const char* tcpReply (uint8_t fd);
 
   static void persistTcpConnection(bool persist);
 
@@ -197,23 +191,23 @@ public:
   static void udpServerPauseListenOnPort(uint16_t port);
   static void udpServerResumeListenOnPort(uint16_t port);
   static bool udpServerListening();						//called by tcpip, in packetLoop
-  static bool udpServerHasProcessedPacket(word len);	//called by tcpip, in packetLoop
+  static bool udpServerHasProcessedPacket(uint16_t len);	//called by tcpip, in packetLoop
 
   // dhcp.cpp
-  static void DhcpStateMachine(word len);
+  static void DhcpStateMachine(uint16_t len);
   static uint32_t dhcpStartTime ();
   static uint32_t dhcpLeaseTime ();
   static bool dhcpLease ();
   static bool dhcpSetup (const char *);
   static bool dhcpSetup ();
   // dns.cpp
-  static bool dnsLookup (prog_char* name, bool fromRam =false);
+  static bool dnsLookup (char* name, bool fromRam =false);
   // webutil.cpp
   static void copyIp (uint8_t *dst, const uint8_t *src);
   static void copyMac (uint8_t *dst, const uint8_t *src);
-  static void printIp (const byte *buf);
+  static void printIp (const uint8_t *buf);
   static void printIp (const char* msg, const uint8_t *buf);
-  static void printIp (const __FlashStringHelper *ifsh, const uint8_t *buf);
+//  static void printIp (const __FlashStringHelper *ifsh, const uint8_t *buf);
   static uint8_t findKeyVal(const char *str,char *strbuf,
                             uint8_t maxlen, const char *key);
   static void urlDecode(char *urlbuf);
