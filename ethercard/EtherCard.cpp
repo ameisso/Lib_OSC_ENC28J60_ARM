@@ -11,11 +11,12 @@
 
 #include <EtherCard.h>
 #include <stdarg.h>
-#include <avr/eeprom.h>
+#include "libosc/hw/hwFunk.h"
+//#include <avr/eeprom.h>
 
 //#define FLOATEMIT // uncomment line to enable $T in emit_P for float emitting
 
-byte Stash::map[256/8];
+uint8_t Stash::map[256/8];
 Stash::Block Stash::bufs[2];
 
 uint8_t Stash::allocBlock () {
@@ -132,7 +133,7 @@ uint16_t Stash::size () {
   return 63 * count + fetchByte(last, 62) - sizeof (StashHeader);
 }
 
-static char* wtoa (word value, char* ptr) {
+static char* wtoa (uint16_t value, char* ptr) {
   if (value > 9)
     ptr = wtoa(value / 10, ptr);
   *ptr = '0' + value % 10;
@@ -140,11 +141,11 @@ static char* wtoa (word value, char* ptr) {
   return ptr;
 }
 
-void Stash::prepare (PGM_P fmt, ...) {
+void Stash::prepare (const char* fmt, ...) {
   Stash::load(0, 0);
-  word* segs = Stash::bufs[0].words;
-  *segs++ = strlen_P(fmt);
-  *segs++ = (word) fmt;
+  uint16_t* segs = Stash::bufs[0].words;
+  *segs++ = strlen(fmt);
+  *segs++ = (uint16_t) fmt;
   va_list ap;
   va_start(ap, fmt);
   for (;;) {
@@ -152,7 +153,7 @@ void Stash::prepare (PGM_P fmt, ...) {
     if (c == 0)
       break;
     if (c == '$') {
-      word argval = va_arg(ap, word), arglen = 0;
+      uint16_t argval = va_arg(ap, uint8_t), arglen = 0;
       switch (pgm_read_byte(fmt++)) {
         case 'D': {
           char buf[7];
@@ -164,12 +165,12 @@ void Stash::prepare (PGM_P fmt, ...) {
           arglen = strlen((const char*) argval);
           break;
         case 'F':
-          arglen = strlen_P((PGM_P) argval);
+          arglen = strlen((const char *) argval);
           break;
         case 'E': {
-          byte* s = (byte*) argval;
+          uint8_t* s = (uint8_t*) argval;
           char d;
-          while ((d = eeprom_read_byte(s++)) != 0)
+          while ((d = (uint8_t)eeprom_read_byte(s++)) != 0)
             ++arglen;
           break;
         }
@@ -186,18 +187,18 @@ void Stash::prepare (PGM_P fmt, ...) {
   va_end(ap);
 }
 
-word Stash::length () {
+uint16_t Stash::length () {
   Stash::load(0, 0);
   return Stash::bufs[0].words[0];
 }
 
-void Stash::extract (word offset, word count, void* buf) {
+void Stash::extract (uint16_t offset, uint16_t count, void* buf) {
   Stash::load(0, 0);
-  word* segs = Stash::bufs[0].words;
-  PGM_P fmt = (PGM_P) *++segs;
+  uint16_t* segs = Stash::bufs[0].words;
+  const char* fmt = (const char*) *++segs;
   Stash stash;
   char mode = '@', tmp[7], *ptr = NULL, *out = (char*) buf;
-  for (word i = 0; i < offset + count; ) {
+  for (uint16_t i = 0; i < offset + count; ) {
     char c = 0;
     switch (mode) {
       case '@': {
@@ -206,7 +207,7 @@ void Stash::extract (word offset, word count, void* buf) {
           return;
         if (c != '$')
           break;
-        word arg = *++segs;
+        uint16_t arg = *++segs;
         mode = pgm_read_byte(fmt++);
         switch (mode) {
           case 'D':
@@ -233,7 +234,7 @@ void Stash::extract (word offset, word count, void* buf) {
         c = pgm_read_byte(ptr++);
         break;
       case 'E':
-        c = eeprom_read_byte((byte*) ptr++);
+        c = eeprom_read_byte((uint8_t*) ptr++);
         break;
       case 'H':
         c = ((Stash*) ptr)->get();
@@ -251,14 +252,14 @@ void Stash::extract (word offset, word count, void* buf) {
 
 void Stash::cleanup () {
   Stash::load(0, 0);
-  word* segs = Stash::bufs[0].words;
-  PGM_P fmt = (PGM_P) *++segs;
+  uint16_t* segs = Stash::bufs[0].words;
+  const char * fmt = (const char*) *++segs;
   for (;;) {
     char c = pgm_read_byte(fmt++);
     if (c == 0)
       break;
     if (c == '$') {
-      word arg = *++segs;
+      uint16_t arg = *++segs;
       if (pgm_read_byte(fmt++) == 'H') {
         Stash stash (arg);
         stash.release();
@@ -267,7 +268,7 @@ void Stash::cleanup () {
   }
 }
 
-void BufferFiller::emit_p(PGM_P fmt, ...) {
+void BufferFiller::emit_p(const char* fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
     for (;;) {
@@ -281,7 +282,7 @@ void BufferFiller::emit_p(PGM_P fmt, ...) {
         c = pgm_read_byte(fmt++);
         switch (c) {
             case 'D':
-                wtoa(va_arg(ap, word), (char*) ptr);
+                wtoa(va_arg(ap, int), (char*) ptr);
                 break;
             #ifdef FLOATEMIT
             case 'T':
@@ -289,7 +290,7 @@ void BufferFiller::emit_p(PGM_P fmt, ...) {
             break;
             #endif
             case 'H': {
-                char p1 =  va_arg(ap, word);
+                char p1 =  va_arg(ap, int);
                 char p2;
                 p2 = (p1 >> 4) & 0x0F;
                 p1 = p1 & 0x0F;
@@ -308,14 +309,14 @@ void BufferFiller::emit_p(PGM_P fmt, ...) {
                 strcpy((char*) ptr, va_arg(ap, const char*));
                 break;
             case 'F': {
-                PGM_P s = va_arg(ap, PGM_P);
+                const char* s = va_arg(ap, const char*);
                 char d;
                 while ((d = pgm_read_byte(s++)) != 0)
                     *ptr++ = d;
                 continue;
             }
             case 'E': {
-                byte* s = va_arg(ap, byte*);
+                uint8_t* s = va_arg(ap, uint8_t*);
                 char d;
                 while ((d = eeprom_read_byte(s++)) != 0)
                     *ptr++ = d;

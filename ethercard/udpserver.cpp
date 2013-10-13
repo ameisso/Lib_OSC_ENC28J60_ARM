@@ -19,7 +19,7 @@ typedef struct {
 } UdpServerListener;
 
 UdpServerListener listeners[UDPSERVER_MAXLISTENERS];
-byte numListeners = 0;
+uint8_t numListeners = 0;
 
 void EtherCard::udpServerListenOnPort(UdpServerCallback callback, uint16_t port) {
 	if(numListeners < UDPSERVER_MAXLISTENERS)
@@ -32,7 +32,7 @@ void EtherCard::udpServerListenOnPort(UdpServerCallback callback, uint16_t port)
 void EtherCard::udpServerPauseListenOnPort(uint16_t port) {
 	for(int i = 0; i < numListeners; i++)
 	{
-		if(gPB[UDP_DST_PORT_H_P] == (listeners[i].port >> 8) && gPB[UDP_DST_PORT_L_P] == ((byte) listeners[i].port)) {
+		if(gPB[UDP_DST_PORT_H_P] == (listeners[i].port >> 8) && gPB[UDP_DST_PORT_L_P] == ((uint8_t) listeners[i].port)) {
 			listeners[i].listening = false;
 		}
 	}
@@ -41,7 +41,7 @@ void EtherCard::udpServerPauseListenOnPort(uint16_t port) {
 void EtherCard::udpServerResumeListenOnPort(uint16_t port) {
 	for(int i = 0; i < numListeners; i++)
 	{
-		if(gPB[UDP_DST_PORT_H_P] == (listeners[i].port >> 8) && gPB[UDP_DST_PORT_L_P] == ((byte) listeners[i].port)) {
+		if(gPB[UDP_DST_PORT_H_P] == (listeners[i].port >> 8) && gPB[UDP_DST_PORT_L_P] == ((uint8_t) listeners[i].port)) {
 			listeners[i].listening = true;
 		}
 	}
@@ -51,11 +51,11 @@ bool EtherCard::udpServerListening() {
 	return numListeners > 0;
 }
 
-bool EtherCard::udpServerHasProcessedPacket(word plen) {
+bool EtherCard::udpServerHasProcessedPacket(uint16_t plen) {
 	bool packetProcessed = false;
 	for(int i = 0; i < numListeners; i++)
 	{
-		if(gPB[UDP_DST_PORT_H_P] == (listeners[i].port >> 8) && gPB[UDP_DST_PORT_L_P] == ((byte) listeners[i].port) && listeners[i].listening)
+		if(gPB[UDP_DST_PORT_H_P] == (listeners[i].port >> 8) && gPB[UDP_DST_PORT_L_P] == ((uint8_t) listeners[i].port) && listeners[i].listening)
 		{
 			uint16_t datalen = (uint16_t) (gPB[UDP_LEN_H_P] << 8)  + gPB[UDP_LEN_L_P] - UDP_HEADER_LEN;
 			listeners[i].callback(

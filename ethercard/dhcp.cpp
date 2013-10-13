@@ -16,7 +16,8 @@
 
 #include "EtherCard.h"
 #include "net.h"
-#include "config.h"
+#include "libosc/common/config.h"//config file to define IP, dhcp name ...
+#include "libosc/hw/hwFunk.h"
 #define gPB ether.buffer
 
 #define DHCP_BOOTREQUEST 1
@@ -80,7 +81,7 @@ enum {
 typedef struct {
     uint8_t op, htype, hlen, hops;
     uint32_t xid;
-    word secs, flags;
+    uint16_t secs, flags;
     uint8_t ciaddr[4], yiaddr[4], siaddr[4], giaddr[4];
     uint8_t chaddr[16], sname[64], file[128];
     // options
@@ -93,7 +94,7 @@ typedef struct {
 #define DHCP_REQUEST_TIMEOUT 10000
 
 static uint8_t dhcpState = DHCP_STATE_INIT;
-static char hostname[] = HOSTNAME
+static char hostname[] = HOSTNAME;
 static uint32_t currentXid;
 static uint32_t stateTimer;
 static uint32_t leaseStart;
@@ -209,16 +210,16 @@ static void send_dhcp_message (void) {
     EtherCard::udpTransmit((bufPtr - gPB) - UDP_DATA_P);
 }
 
-static void process_dhcp_offer (word len) {
+static void process_dhcp_offer (uint16_t len) {
     // Map struct onto payload
     DHCPdata *dhcpPtr = (DHCPdata*) (gPB + UDP_DATA_P);
     // Offered IP address is in yiaddr
     EtherCard::copyIp(EtherCard::myip, dhcpPtr->yiaddr);
     // Scan through variable length option list identifying options we want
-    byte *ptr = (byte*) (dhcpPtr + 1) + 4;
+    uint8_t *ptr = (uint8_t*) (dhcpPtr + 1) + 4;
     do {
-        byte option = *ptr++;
-        byte optionLen = *ptr++;
+        uint8_t option = *ptr++;
+        uint8_t optionLen = *ptr++;
         switch (option) {
             case 1:  EtherCard::copyIp(EtherCard::mymask, ptr);
                      break;
@@ -228,8 +229,10 @@ static void process_dhcp_offer (word len) {
                      break;
             case 51:
             case 58: leaseTime = 0; // option 58 = Renewal Time, 51 = Lease Time
-                     for (byte i = 0; i<4; i++)
+                     for (uint8_t i = 0; i<4; i++)
+										 {
                          leaseTime = (leaseTime << 8) + ptr[i];
+										 }
                      leaseTime *= 1000;      // milliseconds
                      break;
             case 54: EtherCard::copyIp(EtherCard::dhcpip, ptr);
@@ -239,17 +242,17 @@ static void process_dhcp_offer (word len) {
     } while (ptr < gPB + len);
 }
 
-static bool dhcp_received_message_type (word len, byte msgType) {
+static bool dhcp_received_message_type (uint16_t len, uint8_t msgType) {
     // Map struct onto payload
     DHCPdata *dhcpPtr = (DHCPdata*) (gPB + UDP_DATA_P);
 
     if (len >= 70 && gPB[UDP_SRC_PORT_L_P] == DHCP_SRC_PORT &&
         dhcpPtr->xid == currentXid ) {
 
-        byte *ptr = (byte*) (dhcpPtr + 1) + 4;
+        uint8_t *ptr = (uint8_t*) (dhcpPtr + 1) + 4;
         do {
-            byte option = *ptr++;
-            byte optionLen = *ptr++;
+            uint8_t option = *ptr++;
+            uint8_t optionLen = *ptr++;
             if(option == 53 && *ptr == msgType ) {
         // DHCP Message type match found
         return true;
@@ -273,9 +276,9 @@ bool EtherCard::dhcpSetup () {
 	 hostname[9] = '0' + (mymac[5] & 0x0F);
 
 	 dhcpState = DHCP_STATE_INIT;
-	 word start = millis();	
+	 uint16_t start = millis();	
 
-	 while (dhcpState != DHCP_STATE_BOUND && (word) (millis() - start) < 60000) {
+	 while (dhcpState != DHCP_STATE_BOUND && (uint16_t) (millis() - start) < 60000) {
 	  if (isLinkUp()) DhcpStateMachine(packetReceive());
     }
     return dhcpState == DHCP_STATE_BOUND ;
@@ -283,7 +286,7 @@ bool EtherCard::dhcpSetup () {
 
 
 
-void EtherCard::DhcpStateMachine (word len) {
+void EtherCard::DhcpStateMachine (uint16_t len) {
 
 #ifdef DHCPDEBUG
 	if (dhcpState != DHCP_STATE_BOUND) {

@@ -15,7 +15,7 @@
 #endif*/
 #include "enc28j60.h"
 #include "hwFunk.h" //define the pin used for the ethernet communication 
-word ENC28J60::bufferSize;
+uint16_t ENC28J60::bufferSize;
 
 // ENC28J60 Control Registers
 // Control register definitions are a combination of address,
@@ -252,7 +252,10 @@ word ENC28J60::bufferSize;
 static uint8_t Enc28j60Bank;
 static int gNextPacketPtr;
 static uint8_t selectPin;
-
+#define OUTPUT 0
+#define INPUT 1
+#define HIGH 1 
+#define LOW 0
 void ENC28J60::initSPI () {
     pinMode(SS, OUTPUT);
     digitalWrite(SS, HIGH);
@@ -302,7 +305,7 @@ static void writeOp (uint8_t op, uint8_t address, uint8_t data) {
     disableChip();
 }
 
-static void readBuf(word len, uint8_t* data) {
+static void readBuf(uint16_t len, uint8_t* data) {
     enableChip();
     xferSPI(ENC28J60_READ_BUF_MEM);
     while (len--) {
@@ -312,7 +315,7 @@ static void readBuf(word len, uint8_t* data) {
     disableChip();
 }
 
-static void writeBuf(word len, const uint8_t* data) {
+static void writeBuf(uint16_t len, const uint8_t* data) {
     enableChip();
     xferSPI(ENC28J60_WRITE_BUF_MEM);
     while (len--)
@@ -328,12 +331,12 @@ static void SetBank (uint8_t address) {
     }
 }
 
-static byte readRegByte (c address) {
+static uint8_t readRegByte (uint8_t address) {
     SetBank(address);
     return readOp(ENC28J60_READ_CTRL_REG, address);
 }
 
-static word readReg( address) {
+static uint16_t readReg(uint8_t address) {
 	return readRegByte(address) + (readRegByte(address+1) << 8);
 }
 
@@ -342,12 +345,12 @@ static void writeRegByte (uint8_t  address, uint8_t  data) {
     writeOp(ENC28J60_WRITE_CTRL_REG, address, data);
 }
 
-static void writeReg(uint8_t  address, word data) {
+static void writeReg(uint8_t  address, uint16_t data) {
     writeRegByte(address, data);
     writeRegByte(address + 1, data >> 8);
 }
 
-static word readPhyByte (uint8_t  address) {
+static uint16_t readPhyByte (uint8_t  address) {
     writeRegByte(MIREGADR, address);
     writeRegByte(MICMD, MICMD_MIIRD);
     while (readRegByte(MISTAT) & MISTAT_BUSY)
@@ -356,14 +359,14 @@ static word readPhyByte (uint8_t  address) {
     return readRegByte(MIRD+1);
 }
 
-static void writePhy (uint8_t  address, word data) {
+static void writePhy (uint8_t  address, uint16_t data) {
     writeRegByte(MIREGADR, address);
     writeReg(MIWR, data);
     while (readRegByte(MISTAT) & MISTAT_BUSY)
         ;
 }
 
-byte ENC28J60::initialize (word size, const uint8_t * macaddr, uint8_t  csPin) {
+uint8_t ENC28J60::initialize (uint16_t size, const uint8_t * macaddr, uint8_t  csPin) {
     bufferSize = size;
     if (bitRead(SPCR, SPE) == 0)
       initSPI();
@@ -403,7 +406,7 @@ byte ENC28J60::initialize (word size, const uint8_t * macaddr, uint8_t  csPin) {
     writeOp(ENC28J60_BIT_FIELD_SET, EIE, EIE_INTIE|EIE_PKTIE);
     writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_RXEN);
 
-    byte rev = readRegByte(EREVID);
+    uint8_t rev = readRegByte(EREVID);
     // microchip forgot to step the number on the silcon when they
     // released the revision B7. 6 is now rev B7. We still have
     // to see what they do when they release B8. At the moment
@@ -416,7 +419,7 @@ bool ENC28J60::isLinkUp() {
     return (readPhyByte(PHSTAT2) >> 2) & 1;
 }
 
-void ENC28J60::packetSend(word len) {
+void ENC28J60::packetSend(uint16_t len) {
     while (readOp(ENC28J60_READ_CTRL_REG, ECON1) & ECON1_TXRTS)
         if (readRegByte(EIR) & EIR_TXERIF) {
             writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRST);
@@ -429,15 +432,15 @@ void ENC28J60::packetSend(word len) {
     writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRTS);
 }
 
-word ENC28J60::packetReceive() {
-    word len = 0;
+uint16_t ENC28J60::packetReceive() {
+    uint16_t len = 0;
     if (readRegByte(EPKTCNT) > 0) {
         writeReg(ERDPT, gNextPacketPtr);
 
         struct {
-            word nextPacket;
-            word byteCount;
-            word status;
+            uint16_t nextPacket;
+            uint16_t byteCount;
+            uint16_t status;
         } header;
         
         readBuf(sizeof header, (uint8_t *) &header);
@@ -461,7 +464,7 @@ word ENC28J60::packetReceive() {
 }
 
 void ENC28J60::copyout (uint8_t  page, const uint8_t* data) {
-    word destPos = SCRATCH_START + (page << SCRATCH_PAGE_SHIFT);
+    uint16_t destPos = SCRATCH_START + (page << SCRATCH_PAGE_SHIFT);
     if (destPos < SCRATCH_START || destPos > SCRATCH_LIMIT - SCRATCH_PAGE_SIZE)
         return;
     writeReg(EWRPT, destPos);
@@ -469,16 +472,16 @@ void ENC28J60::copyout (uint8_t  page, const uint8_t* data) {
 }
 
 void ENC28J60::copyin (uint8_t page, uint8_t* data) {
-    word destPos = SCRATCH_START + (page << SCRATCH_PAGE_SHIFT);
+    uint16_t destPos = SCRATCH_START + (page << SCRATCH_PAGE_SHIFT);
     if (destPos < SCRATCH_START || destPos > SCRATCH_LIMIT - SCRATCH_PAGE_SIZE)
         return;
     writeReg(ERDPT, destPos);
     readBuf(SCRATCH_PAGE_SIZE, data);
 }
 
-byte ENC28J60::peekin (uint8_t page, uint8_t off) {
-    byte result = 0;
-    word destPos = SCRATCH_START + (page << SCRATCH_PAGE_SHIFT) + off;
+uint8_t ENC28J60::peekin (uint8_t page, uint8_t off) {
+    uint8_t result = 0;
+    uint16_t destPos = SCRATCH_START + (page << SCRATCH_PAGE_SHIFT) + off;
     if (SCRATCH_START <= destPos && destPos < SCRATCH_LIMIT) {
         writeReg(ERDPT, destPos);
         readBuf(1, &result);
@@ -536,8 +539,8 @@ uint8_t ENC28J60::doBIST (uint8_t csPin) {
 
 	// now we can start the memory test
 	
-	word macResult;
-	word bitsResult;
+	uint16_t macResult;
+	uint16_t bitsResult;
 
 	// clear some of the registers registers
     writeRegByte(ECON1, 0);

@@ -6,7 +6,7 @@
 
 #include "EtherCard.h"
 #include "net.h"
-
+#include "libosc/hw/hwFunk.h"
 #define gPB ether.buffer
 
 static uint8_t dnstid_l; // a counter for transaction ID
@@ -83,7 +83,7 @@ bool EtherCard::dnsLookup (char* name, bool fromRam) {
   uint16_t start = millis();
   while (!isLinkUp() || clientWaitingGw()) {
     packetLoop(packetReceive());
-    if ((word) (millis() - start) >= 30000)
+    if ((uint16_t) (millis() - start) >= 30000)
       return false;
   }
     
@@ -92,9 +92,9 @@ bool EtherCard::dnsLookup (char* name, bool fromRam) {
 
   start = millis();
   while (hisip[0] == 0) {
-    if ((word) (millis() - start) >= 30000)
+    if ((uint16_t) (millis() - start) >= 30000)
       return false;
-    word len = packetReceive();
+    uint16_t len = packetReceive();
     if (len > 0 && packetLoop(len) == 0)
       checkForDnsAnswer(len);
   }

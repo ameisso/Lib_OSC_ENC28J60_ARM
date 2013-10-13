@@ -35,19 +35,32 @@
 */
 /**************************************************************************/
 //TODO define the terms and the default values in comment.s
-#define SS
-#define MOSI 
-#define MISO
-#define SCK
-#define SPCR
-#define SPE
-#define MSTR
-#define SPSR
-#define SPI2X
-#define cli
-#define sei
-#define SPDR
-#define SPSR
-#define SPIF
+#define SS 0
+#define MOSI 0
+#define MISO 0
+#define SCK 0
+#define SPCR 0 
+#define SPE 0
+#define MSTR 0
+#define SPSR 0
+#define SPI2X 0
+#define SPDR 0
+//#define SPSR 0 uncomment to redefine
+#define SPIF 0
+
+//bit manipulation (from arduino.h)
+#define bit(b) (1UL << (b))
+#define bitRead(value, bit) (((value) >> (bit)) & 0x01)
+#define bitSet(value, bit) ((value) |= (1UL << (bit)))
+#define bitClear(value, bit) ((value) &= ~(1UL << (bit)))
+#define bitWrite(value, bit, bitvalue) (bitvalue ? bitSet(value, bit) : bitClear(value, bit))
+
 
 uint16_t millis();//function that return the time elapsed since the begining
+void pinMode(int pinNbr, int direction);
+void digitalWrite(int pinNbr, int value);
+void cli();                // disable global interrupts
+void sei();                // enable interrupts
+void delay(int time_millis);//delay before exectuting next instructions
+uint8_t eeprom_read_byte(int byteNumber);//function that read a byte in memory
+uint8_t pgm_read_byte(int byteNumber);

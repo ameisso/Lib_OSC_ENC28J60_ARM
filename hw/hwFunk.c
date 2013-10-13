@@ -41,3 +41,11 @@ uint16_t millis()
 	//todo function that return the time in millis ellapsed since the begining of the program.
 	return 0;//default return!!!
 }
+void cli()
+{
+	__disable_irq();
+}
+void sei()
+{
+	__enable_irq();
+}

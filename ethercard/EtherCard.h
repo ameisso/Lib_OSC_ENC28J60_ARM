@@ -17,17 +17,9 @@
 #define EtherCard_h
 
 
-/*#if ARDUINO >= 100
-  //#include <Arduino.h> // Arduino 1.0
+#define WRITE_RESULT size_t
+#define WRITE_RETURN return 1;
 
-#else
-//  #include <WProgram.h> // Arduino 0022
-  #define WRITE_RESULT void
-  #define WRITE_RETURN
-#endif*/
-  #define WRITE_RESULT size_t
-  #define WRITE_RETURN return 1;
-//#include <avr/pgmspace.h>
 #include "enc28j60.h"
 #include "net.h"
 #include <libosc/common/Print.h>
@@ -105,7 +97,7 @@ public:
   //   offs = 63;
   // }
   
-  static void prepare (PGM_P fmt, ...);
+  static void prepare (const char * fmt, ...);
   static uint16_t length ();
   static void extract (uint16_t offset, uint16_t count, void* buf);
   static void cleanup ();
@@ -120,9 +112,9 @@ public:
   BufferFiller () {}
   BufferFiller (uint8_t* buf) : start (buf), ptr (buf) {}
       
-  void emit_p (PGM_P fmt, ...);
+  void emit_p (const char * fmt, ...);
   void emit_raw (const char* s, uint16_t n) { memcpy(ptr, s, n); ptr += n; }
-  void emit_raw_p (PGM_P p, uint16_t n) { memcpy(ptr, p, n); ptr += n; }
+  void emit_raw_p (const char * p, uint16_t n) { memcpy(ptr, p, n); ptr += n; }
   
   uint8_t* buffer () const { return start; }
   uint16_t position () const { return ptr - start; }

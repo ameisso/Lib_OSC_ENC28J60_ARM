@@ -35,4 +35,4 @@
 */
 /**************************************************************************/
 //Config file for setting the DHCP options, IP in static mode ...
-#define HOSTNAME motor_controler_0
+#define HOSTNAME "motor_controler_0"

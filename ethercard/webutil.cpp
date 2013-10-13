@@ -15,22 +15,22 @@ void EtherCard::copyMac (uint8_t *dst, const uint8_t *src) {
 }
 
 void EtherCard::printIp (const char* msg, const uint8_t *buf) {
-    Serial.print(msg);
+    printf("%s\n",msg);
     EtherCard::printIp(buf);
-    Serial.println();
+    printf("\n");
 }
 
-void EtherCard::printIp (const __FlashStringHelper *ifsh, const uint8_t *buf) {
+/*void EtherCard::printIp (const __FlashStringHelper *ifsh, const uint8_t *buf) {
 	Serial.print(ifsh);
 	EtherCard::printIp(buf);
 	Serial.println();
-}
+}*/
 
 void EtherCard::printIp (const uint8_t *buf) {
 	for (uint8_t i = 0; i < 4; ++i) {
-		Serial.print( buf[i], DEC );
+		printf( "%d \n",buf[i]);
 		if (i < 3)
-			Serial.print('.');
+			printf("%c",'.');
 	}
 }
 
