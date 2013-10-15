@@ -56,11 +56,14 @@
 #define bitWrite(value, bit, bitvalue) (bitvalue ? bitSet(value, bit) : bitClear(value, bit))
 
 
-uint16_t millis();//function that return the time elapsed since the begining
+unsigned int millis();//function that return the time elapsed since the begining
 void pinMode(int pinNbr, int direction);
 void digitalWrite(int pinNbr, int value);
 void cli();                // disable global interrupts
 void sei();                // enable interrupts
 void delay(int time_millis);//delay before exectuting next instructions
-uint8_t eeprom_read_byte(int byteNumber);//function that read a byte in memory
-uint8_t pgm_read_byte(int byteNumber);
+char pgm_read_byte(const char*address_short) ;//maybe it's not int...
+char eeprom_read_byte(unsigned char* address_short);
+
+char* itoa 	( 	int  	__val,		char *  	__s,		int  	__radix	);//see avr doc 	
+char* ltoa 	( long int  	__val,		char *  	__s,		int  	__radix	);//see avr doc 	

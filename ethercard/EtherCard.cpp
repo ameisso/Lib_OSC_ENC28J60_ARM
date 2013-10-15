@@ -153,7 +153,7 @@ void Stash::prepare (const char* fmt, ...) {
     if (c == 0)
       break;
     if (c == '$') {
-      uint16_t argval = va_arg(ap, uint8_t), arglen = 0;
+      uint16_t argval = va_arg(ap,unsigned int), arglen = 0;
       switch (pgm_read_byte(fmt++)) {
         case 'D': {
           char buf[7];

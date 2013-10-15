@@ -13,7 +13,7 @@
 
 #include "EtherCard.h"
 #include "net.h"
-
+#include  "libosc/common/config.h"
 #define gPB ether.buffer
 
 #define PINGPATTERN 0x42
@@ -57,11 +57,7 @@ static unsigned long SEQ;
 #define CLIENTMSS 550
 #define TCP_DATA_START ((uint16_t)TCP_SRC_PORT_H_P+(gPB[TCP_HEADER_LEN_P]>>4)*4)
 
-const char arpreqhdr[] PROGMEM = { 0,1,8,0,6,4,0,1 };
-const char iphdr[] PROGMEM = { 0x45,0,0,0x82,0,0,0x40,0,0x20 };
-const char ntpreqhdr[] PROGMEM = { 0xE3,0,4,0xFA,0,1,0,0,0,1 };
-const uint8_t allOnes[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-const uint8_t ipBroadcast[] = {255, 255, 255, 255};
+
 
 static void fill_checksum(uint8_t dest, uint8_t off, uint16_t len,uint8_t type) {
   const uint8_t* ptr = gPB + off;

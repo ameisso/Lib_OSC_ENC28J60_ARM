@@ -36,7 +36,7 @@
 /**************************************************************************/
 #include "hwfunk.h"
 
-uint16_t millis()
+unsigned int millis()//normaly unint_16
 {
 	//todo function that return the time in millis ellapsed since the begining of the program.
 	return 0;//default return!!!

@@ -5,6 +5,9 @@
 // 2010-05-20 <jc@wippler.nl>
 
 #include "EtherCard.h"
+#include "hwFunk.h"
+ #include <ctype.h>
+ #include <stdlib.h> 
 
 void EtherCard::copyIp (uint8_t *dst, const uint8_t *src) {
     memcpy(dst, src, 4);
