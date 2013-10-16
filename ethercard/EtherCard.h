@@ -20,9 +20,10 @@
 #define WRITE_RESULT size_t
 #define WRITE_RETURN return 1;
 
-#include "enc28j60.h"
-#include "net.h"
+//#include "enc28j60.h"
+//#include "net.h" alraedy included in hwFunk
 #include <libosc/common/Print.h>
+#include "libosc/hw/hwFunk.h"
 
 typedef void (*UdpServerCallback)(
 	uint16_t dest_port,	// the port the packet was sent to

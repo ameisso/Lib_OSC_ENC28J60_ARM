@@ -26,7 +26,7 @@
 #ifndef OSCDATA_h
 #define OSCDATA_h
 
-#include "projectconfig.h"
+
 
 #include <stdlib.h> 
 #include <stdint.h>

@@ -145,7 +145,7 @@ void Stash::prepare (const char* fmt, ...) {
   Stash::load(0, 0);
   uint16_t* segs = Stash::bufs[0].words;
   *segs++ = strlen(fmt);
-  *segs++ = (uint16_t) fmt;
+  *segs++ = (intptr_t) fmt;//was casted as uint16_t
   va_list ap;
   va_start(ap, fmt);
   for (;;) {

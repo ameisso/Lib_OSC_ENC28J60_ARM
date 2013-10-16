@@ -34,19 +34,23 @@
     SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 /**************************************************************************/
+#include <stdint.h>
+#include "libosc/ethercard/net.h"
+#ifndef HWFUNK_H
+#define HWFUNK_H
 //TODO define the terms and the default values in comment.s
-#define SS 0
-#define MOSI 0
-#define MISO 0
-#define SCK 0
-#define SPCR 0 
-#define SPE 0
-#define MSTR 0
-#define SPSR 0
-#define SPI2X 0
-#define SPDR 0
+#define SS 0x42
+#define MOSI 0x42
+#define MISO 0x42
+#define SCK 0x42
+#define SPCR 0x42
+#define SPE 0x42
+#define MSTR 0x42
+#define SPSR 0x42
+#define SPI2X 0x42
+#define SPDR;
 //#define SPSR 0 uncomment to redefine
-#define SPIF 0
+#define SPIF 0x42
 
 //bit manipulation (from arduino.h)
 #define bit(b) (1UL << (b))
@@ -67,3 +71,37 @@ char eeprom_read_byte(unsigned char* address_short);
 
 char* itoa 	( 	int  	__val,		char *  	__s,		int  	__radix	);//see avr doc 	
 char* ltoa 	( long int  	__val,		char *  	__s,		int  	__radix	);//see avr doc 	
+
+//ENC28J60 FUNCS
+class ENC28J60 {
+public:
+
+
+  static uint8_t buffer[];
+  static uint16_t bufferSize;
+  
+  static uint8_t* tcpOffset () { return buffer + 0x36; }
+
+  static void initSPI ();//replaced by : void SSP_Init(SSP_TypeDef *SSPx, SSP_CFG_Type *SSP_ConfigStruct)
+  static uint8_t initialize (const uint16_t size, const uint8_t* macaddr,
+                             uint8_t csPin =8);
+  static bool isLinkUp ();
+  
+  static void packetSend (uint16_t len);
+  static uint16_t packetReceive ();
+  
+  static void copyout (uint8_t page, const uint8_t* data);
+  static void copyin (uint8_t page, uint8_t* data);
+  static uint8_t peekin (uint8_t page, uint8_t off);
+
+  static void powerDown();  // contrib by Alex M.
+  static void powerUp();    // contrib by Alex M.
+  
+  static void enableBroadcast();
+  static void disableBroadcast();
+  static void disableMulticast ();
+  static uint8_t doBIST(uint8_t csPin =8);
+	};
+
+typedef ENC28J60 Ethernet;
+#endif
