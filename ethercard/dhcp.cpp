@@ -18,6 +18,7 @@
 #include "net.h"
 #include "libosc/common/config.h"//config file to define IP, dhcp name ...
 #include "libosc/hw/hwFunk.h"
+
 #define gPB ether.buffer
 
 #define DHCP_BOOTREQUEST 1

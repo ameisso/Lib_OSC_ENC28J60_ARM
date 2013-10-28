@@ -20,11 +20,9 @@
 #ifndef Print_h
 #define Print_h
 
-#include <inttypes.h>
-#include <stdio.h> // for size_t
+#include "lpc_types.h"
+//#include <stdio.h> // for size_t
 #include <string.h>
-//#include "WString.h"
-//#include "Printable.h"
 
 #define DEC 10
 #define HEX 16

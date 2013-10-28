@@ -365,7 +365,6 @@ OSCErrorCode OSCMessage::getError(){
 /*=============================================================================
     SENDING
  =============================================================================*/
-
 void OSCMessage::send(Print &p){
     //don't send a message with errors
     if (hasError()){

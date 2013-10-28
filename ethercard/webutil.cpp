@@ -6,8 +6,6 @@
 
 #include "EtherCard.h"
 #include "hwFunk.h"
- #include <ctype.h>
- #include <stdlib.h> 
 
 void EtherCard::copyIp (uint8_t *dst, const uint8_t *src) {
     memcpy(dst, src, 4);
@@ -18,9 +16,10 @@ void EtherCard::copyMac (uint8_t *dst, const uint8_t *src) {
 }
 
 void EtherCard::printIp (const char* msg, const uint8_t *buf) {
-    printf("%s\n",msg);
+    //TODO
+	/*printf("%s\n",msg);
     EtherCard::printIp(buf);
-    printf("\n");
+    printf("\n");*/
 }
 
 /*void EtherCard::printIp (const __FlashStringHelper *ifsh, const uint8_t *buf) {
@@ -30,11 +29,12 @@ void EtherCard::printIp (const char* msg, const uint8_t *buf) {
 }*/
 
 void EtherCard::printIp (const uint8_t *buf) {
-	for (uint8_t i = 0; i < 4; ++i) {
+	//TODO
+	/*for (uint8_t i = 0; i < 4; ++i) {
 		printf( "%d \n",buf[i]);
 		if (i < 3)
 			printf("%c",'.');
-	}
+	}*/
 }
 
 // search for a string of the form key=value in
@@ -156,7 +156,7 @@ uint8_t EtherCard::parseIp (uint8_t *bytestr,char *str)
 {
     char *sptr;
     uint8_t i=0;
-    sptr=NULL;
+    sptr=(char*)NULL;
     while(i<4){
         bytestr[i]=0;
         i++;
@@ -171,7 +171,7 @@ uint8_t EtherCard::parseIp (uint8_t *bytestr,char *str)
             *str ='\0';
             bytestr[i]=(atoi(sptr)&0xff);
             i++;
-            sptr=NULL;
+            sptr=(char*)NULL;
         }
         str++;
     }
@@ -189,7 +189,7 @@ void EtherCard::makeNetStr (char *resultstr,uint8_t *bytestr,uint8_t len,char se
     uint8_t i=0;
     uint8_t j=0;
     while(i<len){
-        itoa((int)bytestr[i],&resultstr[j],base);
+        //TODO itoa((int)bytestr[i],&resultstr[j],base);
         // search end of str:
         while(resultstr[j]){j++;}
         resultstr[j]=separator;

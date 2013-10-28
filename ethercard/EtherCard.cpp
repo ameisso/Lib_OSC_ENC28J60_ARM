@@ -10,9 +10,8 @@
 // 2010-05-19 <jc@wippler.nl>
 
 #include <EtherCard.h>
-#include <stdarg.h>
-#include "libosc/hw/hwFunk.h"
-//#include <avr/eeprom.h>
+#include "hwFunk.h"
+
 
 //#define FLOATEMIT // uncomment line to enable $T in emit_P for float emitting
 
@@ -149,12 +148,12 @@ void Stash::prepare (const char* fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
   for (;;) {
-    char c = pgm_read_byte(fmt++);
+    char c = *(fmt++);
     if (c == 0)
       break;
     if (c == '$') {
       uint16_t argval = va_arg(ap,unsigned int), arglen = 0;
-      switch (pgm_read_byte(fmt++)) {
+      switch (*(fmt++)) {
         case 'D': {
           char buf[7];
           wtoa(argval, buf);
@@ -197,18 +196,18 @@ void Stash::extract (uint16_t offset, uint16_t count, void* buf) {
   uint16_t* segs = Stash::bufs[0].words;
   const char* fmt = (const char*) *++segs;
   Stash stash;
-  char mode = '@', tmp[7], *ptr = NULL, *out = (char*) buf;
+  char mode = '@', tmp[7], *ptr = (char*)NULL, *out = (char*) buf;
   for (uint16_t i = 0; i < offset + count; ) {
     char c = 0;
     switch (mode) {
       case '@': {
-        c = pgm_read_byte(fmt++);
+        c = *(fmt++);
         if (c == 0)
           return;
         if (c != '$')
           break;
         uint16_t arg = *++segs;
-        mode = pgm_read_byte(fmt++);
+        mode = *(fmt++);
         switch (mode) {
           case 'D':
             wtoa(arg, tmp);
@@ -231,7 +230,7 @@ void Stash::extract (uint16_t offset, uint16_t count, void* buf) {
         c = *ptr++;
         break;
       case 'F':
-        c = pgm_read_byte(ptr++);
+        c = *(ptr++);
         break;
       case 'E':
         c = eeprom_read_byte((uint8_t*) ptr++);
@@ -255,12 +254,12 @@ void Stash::cleanup () {
   uint16_t* segs = Stash::bufs[0].words;
   const char * fmt = (const char*) *++segs;
   for (;;) {
-    char c = pgm_read_byte(fmt++);
+    char c = *(fmt++);
     if (c == 0)
       break;
     if (c == '$') {
       uint16_t arg = *++segs;
-      if (pgm_read_byte(fmt++) == 'H') {
+      if (*(fmt++) == 'H') {
         Stash stash (arg);
         stash.release();
       }
@@ -272,14 +271,14 @@ void BufferFiller::emit_p(const char* fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
     for (;;) {
-        char c = pgm_read_byte(fmt++);
+        char c = *(fmt++);
         if (c == 0)
             break;
         if (c != '$') {
             *ptr++ = c;
             continue;
         }
-        c = pgm_read_byte(fmt++);
+        c = *(fmt++);
         switch (c) {
             case 'D':
                 wtoa(va_arg(ap, int), (char*) ptr);
@@ -303,7 +302,7 @@ void BufferFiller::emit_p(const char* fmt, ...) {
                 continue;
             }
             case 'L':
-                ltoa(va_arg(ap, long), (char*) ptr, 10);
+                //TODO printf("%li", va_arg(ap, long), (char*) ptr);
                 break;
             case 'S':
                 strcpy((char*) ptr, va_arg(ap, const char*));
@@ -311,7 +310,7 @@ void BufferFiller::emit_p(const char* fmt, ...) {
             case 'F': {
                 const char* s = va_arg(ap, const char*);
                 char d;
-                while ((d = pgm_read_byte(s++)) != 0)
+                while ((d = *(s++)) != 0)
                     *ptr++ = d;
                 continue;
             }
@@ -345,12 +344,11 @@ bool EtherCard::using_dhcp = false;
 bool EtherCard::persist_tcp_connection = false;
 
 uint8_t EtherCard::begin (const uint16_t size,
-                           const uint8_t* macaddr,
-                            uint8_t csPin) {
+                           const uint8_t* macaddr) {
   using_dhcp = false;
   Stash::initMap(56);
   copyMac(mymac, macaddr);
-  return initialize(size, mymac, csPin);
+  return initialize(size, mymac);
 }
 
 bool EtherCard::staticSetup (const uint8_t* my_ip,

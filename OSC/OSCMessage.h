@@ -27,8 +27,7 @@
 #define OSCMESSAGE_h
 
 #include "OSCData.h"
-#include <libosc/common/Print.h>
-
+#include "Print.h"
 
 class OSCMessage
 {

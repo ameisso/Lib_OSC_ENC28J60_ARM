@@ -18,13 +18,6 @@
 
 #define PINGPATTERN 0x42
 
-// Avoid spurious pgmspace warnings - http://forum.jeelabs.net/node/327
-// See also http://gcc.gnu.org/bugzilla/show_bug.cgi?id=34734
-#undef PROGMEM 
-#define PROGMEM __attribute__(( section(".progmem.data") )) 
-#undef PSTR 
-#define PSTR(s) (__extension__({static char c[] PROGMEM = (s); &c[0];}))
-
 static uint8_t tcpclient_src_port_l=1; 
 static uint8_t tcp_fd; // a file descriptor, will be encoded into the port
 static uint8_t tcp_client_state;
@@ -57,6 +50,11 @@ static unsigned long SEQ;
 #define CLIENTMSS 550
 #define TCP_DATA_START ((uint16_t)TCP_SRC_PORT_H_P+(gPB[TCP_HEADER_LEN_P]>>4)*4)
 
+const char arpreqhdr[] = { 0,1,8,0,6,4,0,1 };
+const char iphdr[] = { 0x45,0,0,0x82,0,0,0x40,0,0x20 };
+const char ntpreqhdr[]  = { 0xE3,0,4,0xFA,0,1,0,0,0,1 };
+const uint8_t allOnes[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+const uint8_t ipBroadcast[] = {255, 255, 255, 255};
 
 
 static void fill_checksum(uint8_t dest, uint8_t off, uint16_t len,uint8_t type) {
@@ -476,24 +474,24 @@ static uint16_t www_client_internal_datafill_cb(uint8_t fd) {
   BufferFiller bfill = EtherCard::tcpOffset();
   if (fd==www_fd) {
     if (client_postval == 0) {
-      bfill.emit_p(PSTR("GET $F$S HTTP/1.0\r\n"
+      bfill.emit_p("GET $F$S HTTP/1.0\r\n"
                         "Host: $F\r\n"
                         "$F\r\n"
-                        "\r\n"), client_urlbuf,
+                        "\r\n", client_urlbuf,
                                  client_urlbuf_var,
                                  client_hoststr, client_additionalheaderline);
     } else {
       char* ahl = client_additionalheaderline;
-      bfill.emit_p(PSTR("POST $F HTTP/1.0\r\n"
+      bfill.emit_p("POST $F HTTP/1.0\r\n"
                         "Host: $F\r\n"
                         "$F$S"
                         "Accept: */*\r\n"
                         "Content-Length: $D\r\n"
                         "Content-Type: application/x-www-form-urlencoded\r\n"
                         "\r\n"
-                        "$S"), client_urlbuf,
+                        "$S", client_urlbuf,
                                  client_hoststr,
-                                 ahl != 0 ? ahl : PSTR(""),
+                                 ahl != 0 ? ahl : "",
                                  ahl != 0 ? "\r\n" : "",
                                  strlen(client_postval),
                                  client_postval);
@@ -513,7 +511,7 @@ static uint8_t www_client_internal_result_cb(uint8_t fd, uint8_t statuscode, uin
 }
 
 void EtherCard::browseUrl (char *urlbuf, const char *urlbuf_varpart, char *hoststr, void (*callback)(uint8_t,uint16_t,uint16_t)) {
-  browseUrl(urlbuf, urlbuf_varpart, hoststr, PSTR("Accept: text/html"), callback);
+  browseUrl(urlbuf, urlbuf_varpart, hoststr, "Accept: text/html", callback);
 }
 
 void EtherCard::browseUrl (char *urlbuf, const char *urlbuf_varpart, char *hoststr, char *additionalheaderline, void (*callback)(uint8_t,uint16_t,uint16_t)) {

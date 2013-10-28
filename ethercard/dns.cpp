@@ -25,7 +25,7 @@ static void dnsRequest (const char *progmem_hostname, bool fromRam) {
   do {
     uint8_t n = 0;
     for(;;) {
-      c = fromRam ? *progmem_hostname : pgm_read_byte(progmem_hostname);
+      c = *(progmem_hostname);
       ++progmem_hostname;
       if (c == '.' || c == 0)
         break;

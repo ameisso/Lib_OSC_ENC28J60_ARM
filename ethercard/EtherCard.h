@@ -20,16 +20,25 @@
 #define WRITE_RESULT size_t
 #define WRITE_RETURN return 1;
 
-//#include "enc28j60.h"
-//#include "net.h" alraedy included in hwFunk
-#include <libosc/common/Print.h>
-#include "libosc/hw/hwFunk.h"
+#include "enc28j60.h"
+#include "net.h"
+#include "Print.h"
+#include <stdarg.h>
+#include <stdlib.h>
+#include <ctype.h>
+
+//bit manipulation (from arduino.h)
+#define bit(b) (1UL << (b))
+#define bitRead(value, bit) (((value) >> (bit)) & 0x01)
+#define bitSet(value, bit) ((value) |= (1UL << (bit)))
+#define bitClear(value, bit) ((value) &= ~(1UL << (bit)))
+#define bitWrite(value, bit, bitvalue) (bitvalue ? bitSet(value, bit) : bitClear(value, bit))
 
 typedef void (*UdpServerCallback)(
 	uint16_t dest_port,	// the port the packet was sent to
 	uint8_t src_ip[4],	// the ip of the sender
 	const char *data,			// the data
-	uint16_t len);		// the length of the data
+	int len);		// the length of the data
 
 typedef struct {
   uint8_t count;     // number of allocated pages
@@ -137,8 +146,7 @@ public:
   static bool persist_tcp_connection; // whether to break connections on first packet received
 
   // EtherCard.cpp
-  static uint8_t begin (const uint16_t size, const uint8_t* macaddr,
-                        uint8_t csPin =8);  
+  static uint8_t begin (const uint16_t size, const uint8_t* macaddr);
   static bool staticSetup (const uint8_t* my_ip =0,
                             const uint8_t* gw_ip =0,
                              const uint8_t* dns_ip =0);

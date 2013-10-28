@@ -34,74 +34,45 @@
     SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 /**************************************************************************/
-#include <stdint.h>
-#include "libosc/ethercard/net.h"
 #ifndef HWFUNK_H
 #define HWFUNK_H
-//TODO define the terms and the default values in comment.s
-#define SS 0x42
-#define MOSI 0x42
-#define MISO 0x42
-#define SCK 0x42
-#define SPCR 0x42
-#define SPE 0x42
-#define MSTR 0x42
-#define SPSR 0x42
-#define SPI2X 0x42
-#define SPDR;
-//#define SPSR 0 uncomment to redefine
-#define SPIF 0x42
 
-//bit manipulation (from arduino.h)
-#define bit(b) (1UL << (b))
-#define bitRead(value, bit) (((value) >> (bit)) & 0x01)
-#define bitSet(value, bit) ((value) |= (1UL << (bit)))
-#define bitClear(value, bit) ((value) &= ~(1UL << (bit)))
-#define bitWrite(value, bit, bitvalue) (bitvalue ? bitSet(value, bit) : bitClear(value, bit))
+#include "config.h"
+#include "lpc13xx.h"
+#include "lpc13xx_systick.h"
+#include "lpc13xx_iocon.h"
+#include "lpc13xx_syscon.h"
+#include "lpc13xx_gpio.h"
+#include "lpc13xx_ssp.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
-unsigned int millis();//function that return the time elapsed since the begining
-void pinMode(int pinNbr, int direction);
-void digitalWrite(int pinNbr, int value);
+//Chip Select Port & Pin
+#define ETH_CS_PORT		PORT1
+#define ETH_CS_PIN		GPIO_Pin_10
+
+//SCK pin location
+//!\ if 0_10, SWD is disabled
+#define SCK_LOC SCK_PIO0_6
+
+void hwFunctionsInit();
 void cli();                // disable global interrupts
 void sei();                // enable interrupts
-void delay(int time_millis);//delay before exectuting next instructions
-char pgm_read_byte(const char*address_short) ;//maybe it's not int...
+void enableChip();
+void disableChip();
+void initSPI();
+void xferSPI(uint8_t data);
+uint8_t rcvSPI();
+unsigned int millis();//function that return the time elapsed since the begining
+void delay(int time_millis);
+
 char eeprom_read_byte(unsigned char* address_short);
 
-char* itoa 	( 	int  	__val,		char *  	__s,		int  	__radix	);//see avr doc 	
-char* ltoa 	( long int  	__val,		char *  	__s,		int  	__radix	);//see avr doc 	
+#ifdef __cplusplus
+}
+#endif
 
-//ENC28J60 FUNCS
-class ENC28J60 {
-public:
-
-
-  static uint8_t buffer[];
-  static uint16_t bufferSize;
-  
-  static uint8_t* tcpOffset () { return buffer + 0x36; }
-
-  static void initSPI ();//replaced by : void SSP_Init(SSP_TypeDef *SSPx, SSP_CFG_Type *SSP_ConfigStruct)
-  static uint8_t initialize (const uint16_t size, const uint8_t* macaddr,
-                             uint8_t csPin =8);
-  static bool isLinkUp ();
-  
-  static void packetSend (uint16_t len);
-  static uint16_t packetReceive ();
-  
-  static void copyout (uint8_t page, const uint8_t* data);
-  static void copyin (uint8_t page, uint8_t* data);
-  static uint8_t peekin (uint8_t page, uint8_t off);
-
-  static void powerDown();  // contrib by Alex M.
-  static void powerUp();    // contrib by Alex M.
-  
-  static void enableBroadcast();
-  static void disableBroadcast();
-  static void disableMulticast ();
-  static uint8_t doBIST(uint8_t csPin =8);
-	};
-
-typedef ENC28J60 Ethernet;
 #endif

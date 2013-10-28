@@ -35,10 +35,29 @@
 */
 /**************************************************************************/
 //Config file for setting the DHCP options, IP in static mode ...
-#define HOSTNAME "motor_controler_0"
+#include "lpc_types.h"
 
-const char arpreqhdr[] = { 0,1,8,0,6,4,0,1 };
-const char iphdr[] = { 0x45,0,0,0x82,0,0,0x40,0,0x20 };
-const char ntpreqhdr[]  = { 0xE3,0,4,0xFA,0,1,0,0,0,1 };
-const uint8_t allOnes[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-const uint8_t ipBroadcast[] = {255, 255, 255, 255};
+#ifndef OSC_CONFIG_H
+#define OSC_CONFIG_H
+
+#define HOSTNAME "Arduino" //TODO
+
+#define STATIC_IP 0  // set to 1 to disable DHCP (adjust myip/gwip values below)
+
+#if STATIC_IP
+// ethernet interface ip address
+static uint8_t myip[] = { 192,168,1,111 };
+// gateway ip address
+static uint8_t gwip[] = { 192,168,1,1 };
+#endif
+
+//port numbers
+const unsigned int inPort = 8000;
+const unsigned int outPort = 9500;
+
+// ethernet mac address - must be unique on your network
+static uint8_t mymac[] = { 0x70,0x69,0x69,0x2D,0x30,0x31 };
+
+#define MAX_OSC_CALLBACKS 10
+
+#endif //OSC_CONFIG_H
